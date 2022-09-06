@@ -1,0 +1,12 @@
+[submodule "lambda-company-delete"]
+	path = lambda-company-delete
+	url = https://github.com/markoshlima/lambda-company-delete
+[submodule "lambda-company-list"]
+	path = lambda-company-list
+	url = https://github.com/markoshlima/lambda-company-list
+[submodule "lambda-company-save"]
+	path = lambda-company-save
+	url = https://github.com/markoshlima/lambda-company-save
+[submodule "lambda-test-integration-company"]
+	path = lambda-test-integration-company
+	url = https://github.com/markoshlima/lambda-test-integration-company
