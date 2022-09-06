@@ -1,0 +1,172 @@
+{
+    "Comment": "A description of my state machine",
+    "StartAt": "Save New Company",
+    "States": {
+      "Save New Company": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::apigateway:invoke",
+        "Parameters": {
+          "ApiEndpoint": "{API_GATEWAY_CODE}.execute-api.sa-east-1.amazonaws.com",
+          "Method": "POST",
+          "Stage": "v1",
+          "Path": "/company",
+          "RequestBody": {
+            "name": "Teste Company",
+            "bvmf": "TEST4",
+            "local": "Sao Paulo/SP Brazil",
+            "employees": 100,
+            "description": "This is a test company"
+          }
+        },
+        "Next": "Verify Company Saved"
+      },
+      "Verify Company Saved": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "And": [
+              {
+                "Variable": "$.StatusCode",
+                "NumericEquals": 201
+              },
+              {
+                "Variable": "$.ResponseBody.bvmf",
+                "StringEquals": "TEST4"
+              },
+              {
+                "Variable": "$.ResponseBody.company_id",
+                "IsPresent": true
+              }
+            ],
+            "Next": "Get Company"
+          }
+        ],
+        "Default": "Fail State"
+      },
+      "Fail State": {
+        "Type": "Pass",
+        "Result": {
+          "result": "Fail"
+        },
+        "Next": "Fail"
+      },
+      "Fail": {
+        "Type": "Fail"
+      },
+      "Get Company": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::apigateway:invoke",
+        "Parameters": {
+          "ApiEndpoint": "{API_GATEWAY_CODE}.execute-api.sa-east-1.amazonaws.com",
+          "Method": "GET",
+          "Stage": "v1",
+          "Path.$": "States.Format('/company/{}', $.ResponseBody.company_id)"
+        },
+        "Next": "Verifiy company listed"
+      },
+      "Verifiy company listed": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.StatusCode",
+            "NumericEquals": 200,
+            "Next": "Change Company"
+          }
+        ],
+        "Default": "Fail State"
+      },
+      "Change Company": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::apigateway:invoke",
+        "Parameters": {
+          "ApiEndpoint": "{API_GATEWAY_CODE}.execute-api.sa-east-1.amazonaws.com",
+          "Method": "PUT",
+          "Stage": "v1",
+          "Path": "/company",
+          "RequestBody": {
+            "company_id.$": "$.ResponseBody.company_id",
+            "name": "Teste Company Changed",
+            "bvmf": "TEST41",
+            "local": "Sao Paulo/SP Brazil",
+            "employees": 101,
+            "description": "This is a test company two"
+          }
+        },
+        "Next": "Verify Company Changed"
+      },
+      "Verify Company Changed": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "And": [
+              {
+                "Variable": "$.ResponseBody.bvmf",
+                "StringEquals": "TEST41"
+              },
+              {
+                "Variable": "$.StatusCode",
+                "NumericEquals": 200
+              }
+            ],
+            "Next": "Delete Company"
+          }
+        ],
+        "Default": "Fail State"
+      },
+      "Delete Company": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::apigateway:invoke",
+        "Parameters": {
+          "ApiEndpoint": "{API_GATEWAY_CODE}.execute-api.sa-east-1.amazonaws.com",
+          "Method": "DELETE",
+          "Stage": "v1",
+          "Path.$": "States.Format('/company/{}', $.ResponseBody.company_id)"
+        },
+        "Next": "Verify Company Deleted",
+        "ResultPath": "$.DeleteResult"
+      },
+      "Verify Company Deleted": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.DeleteResult.StatusCode",
+            "NumericEquals": 204,
+            "Next": "Get Company Again"
+          }
+        ],
+        "Default": "Fail State"
+      },
+      "Get Company Again": {
+        "Type": "Task",
+        "Resource": "arn:aws:states:::apigateway:invoke",
+        "Parameters": {
+          "ApiEndpoint": "{API_GATEWAY_CODE}.execute-api.sa-east-1.amazonaws.com",
+          "Method": "GET",
+          "Stage": "v1",
+          "Path.$": "States.Format('/company/{}', $.ResponseBody.company_id)"
+        },
+        "Next": "Verify Company Listed After Deleted"
+      },
+      "Verify Company Listed After Deleted": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.StatusCode",
+            "NumericEquals": 204,
+            "Next": "Success State"
+          }
+        ],
+        "Default": "Fail State"
+      },
+      "Success State": {
+        "Type": "Pass",
+        "Next": "Success",
+        "Result": {
+          "result": "Success"
+        }
+      },
+      "Success": {
+        "Type": "Succeed"
+      }
+    }
+  }

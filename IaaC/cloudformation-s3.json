@@ -1,0 +1,8 @@
+{
+    "S3Bucket": {
+        "Type": "AWS::S3::Bucket",
+        "Properties": {
+            "BucketName": "bucket-to-deploy-sam-files"
+        }
+    }
+}
